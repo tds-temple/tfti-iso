@@ -1,0 +1,4 @@
+<div [ngSwitch]="router.path$ | async">
+  <app-login *ngSwitchCase="'login'"></app-login>
+  <app-dashboard *ngSwitchCase="'dashboard'"></app-dashboard>
+</div>

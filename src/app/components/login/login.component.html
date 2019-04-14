@@ -1,0 +1,8 @@
+<div class='login'>
+  <h1 class="heading">Agents of Tons of Fun Travel</h1>
+  <form class="form" (ngSubmit)="data.login(form)" #form="ngForm">
+    <input type="text" name="username" placeholder="Enter username..." class="control" ngModel/>
+    <input type="password" name="password" placeholder="Enter password..." class="control" ngModel/>
+    <button class="btn btn-block" type="submit">Login</button>
+  </form>
+</div>
