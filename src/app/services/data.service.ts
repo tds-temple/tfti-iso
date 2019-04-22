@@ -86,8 +86,11 @@ class DataService {
     });
   }
 
-  searchFor(term: string) {
-    console.log(term);
+  deleteSupplier(supplier) {
+    this.http.delete(`${this.baseUrl}/suppliers/${supplier.id}.json`).subscribe({
+      next: res => console.log(res),
+      error: err => console.log(err)
+    });
   }
   /////////////////////////// Resources ////////////////////////////
   getResources() {
@@ -95,7 +98,7 @@ class DataService {
       next: (data) => {
         const dataArray: ResourceModel[] = [];
         for(let key in data) {
-          dataArray.push({ ...data[key], id: key })
+          dataArray.push({ ...data[key], id: key, type: 'resources' })
         }
         this.resourcesSubject.next(dataArray);
       },
@@ -114,13 +117,20 @@ class DataService {
       error: err => console.log(err)
     });
   }
+
+  deleteResource(resource, type) {
+    this.http.delete(`${this.baseUrl}/${type}/${resource.id}.json`).subscribe({
+      next: res => console.log(res),
+      error: err => console.log(err)
+    });
+  }
   /////////////////////////// Learning Resources ////////////////////////////
   getLearningResources() {
     this.http.get(`${this.baseUrl}/learningResources.json`).subscribe({
       next: (data) => {
         const dataArray: ResourceModel[] = [];
         for(let key in data) {
-          dataArray.push({ ...data[key], id: key })
+          dataArray.push({ ...data[key], id: key, type: 'learningResources' })
         }
         this.learningResourcesSubject.next(dataArray);
       },
@@ -219,6 +229,13 @@ class DataService {
 
   updateUser(user) {
     this.http.put(`${this.baseUrl}/users/${user.id}.json`, user).subscribe({
+      next: res => console.log(res),
+      error: err => console.log(err)
+    });
+  }
+
+  deleteUser(user) {
+    this.http.delete(`${this.baseUrl}/users/${user.id}.json`).subscribe({
       next: res => console.log(res),
       error: err => console.log(err)
     });

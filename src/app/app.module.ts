@@ -19,7 +19,17 @@ import {
   faEdit,
   faTimes,
   faStar,
+  faBan,
+  faCheck,
+  faPhone,
+  faEnvelope,
+  faHome
 } from '@fortawesome/free-solid-svg-icons';
+import {
+  faFacebook,
+  faTwitter,
+  faLinkedin
+} from '@fortawesome/free-brands-svg-icons';
 
 // @services
 import { RouterService } from './services/router.service';
@@ -63,7 +73,15 @@ class AppModule {
       faPlus,
       faEdit,
       faTimes,
-      faStar
+      faStar,
+      faBan,
+      faCheck,
+      faPhone,
+      faEnvelope,
+      faHome,
+      faFacebook,
+      faTwitter,
+      faLinkedin
     );
   }
 }

@@ -6,7 +6,7 @@
         <button class="btn" (click)="router.setView('resources')">Resources</button>
         <button class="btn" (click)="router.setView('notes')">Notes</button>
         <button class="btn" (click)="router.setView('me')">Me</button>
-        <button class="btn" (click)="router.setView('agency')">{{ router.agencyMode$ | async | titlecase }}</button>
+        <button class="btn" (click)="goToAdmin()">{{ router.agencyMode$ | async | titlecase }}</button>
       </div>
     </div>
     <div class="user">
@@ -21,23 +21,36 @@
       <div class="controls" [ngSwitch]="router.view$ | async">
         <div class="suppliers" *ngSwitchCase="'suppliers'">
           <fa-icon [ngClass]="{red: showFavorites === true }" (click)="toggleShowFavorites()" class="icon" [icon]="['fas', 'heart']"></fa-icon>
-          <input class="input" type="text" (change)="data.searchFor(search.value)" placeholder="Search suppliers..." #search/>
+          <input class="input" type="text" (keyup)="search()" placeholder="Search suppliers..." [(ngModel)]="searchTerm"/>
         </div>
         <div class="resources" *ngSwitchCase="'resources'">
           <fa-icon (click)="router.setResourceMode('tools')" class="icon" [icon]="['fas', 'tools']"></fa-icon>
           <fa-icon (click)="router.setResourceMode('learning')" class="icon" [icon]="['fas', 'graduation-cap']"></fa-icon>
         </div>
-        <div class="agency" *ngSwitchCase="'agency'">
-          <h1>Agents</h1>
+        <div class="agency" *ngSwitchCase="'agency'" [ngSwitch]="router.agencyMode$ | async">
+          <div *ngSwitchCase="'agency'">
+            <h1>Agents</h1>
+          </div>
+          <div *ngSwitchCase="'admin'">
+            <button class="btn" (click)="router.setModal('add')">
+              <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+            </button>
+            <button class="btn" (click)="router.setModal('edit')">
+              <fa-icon [icon]="['fas', 'edit']"></fa-icon>
+            </button>
+            <button class="btn" (click)="router.setModal('delete')">
+              <fa-icon [icon]="['fas', 'times']"></fa-icon>
+            </button>
+          </div>
         </div>
         <div class="agency" *ngSwitchCase="'notes'">
           <button class="btn" (click)="router.setModal('new-note')" >
             <fa-icon [icon]="['fas', 'plus']"></fa-icon>
           </button>
-          <button class="btn">
+          <button class="btn" (click)="openEditNoteModal()">
             <fa-icon [icon]="['fas', 'edit']"></fa-icon>
           </button>
-          <button class="btn" (click)="router.setModal('delete-note')">
+          <button class="btn" (click)="openDeleteNoteConfirmation()">
             <fa-icon [icon]="['fas', 'times']"></fa-icon>
           </button>
         </div>
@@ -50,7 +63,7 @@
         <div class="suppliers" *ngSwitchCase="'suppliers'">
           <button
             class="btn"
-            *ngFor="let supplier of suppliersToRender()"
+            *ngFor="let supplier of suppliersToRender"
             (click)="selectSupplier(supplier)">
             {{ supplier.name }}
           </button>
@@ -82,8 +95,10 @@
           <div *ngSwitchCase="'agency'">
             <button (click)="data.selectUser(user.id)" class="btn" *ngFor="let user of (data.users$ | async)">{{ user.name }}</button>
           </div>
-          <div *ngSwitchCase="'admin'">
-
+          <div *ngSwitchCase="'admin'" class="admin-entities">
+            <button class="btn" (click)="setAdminEntity('suppliers')">Suppliers</button>
+            <button class="btn" (click)="setAdminEntity('resources')">Resources</button>
+            <button class="btn" (click)="setAdminEntity('agents')">Agents</button>
           </div>
         </div>
       </div>
@@ -195,13 +210,56 @@
             </div>
 
           </div>
-          <div *ngSwitchCase="'agency'" [ngSwitch]="router.agencyMode$ | async">
-            <div *ngSwitchCase="'agency'">
-              <div *ngIf="(data.selectedUser$ | async) as user">
-                {{ user | json }}
+          <div class="fill" *ngSwitchCase="'agency'" [ngSwitch]="router.agencyMode$ | async">
+            <div *ngSwitchCase="'agency'" class="fill">
+              <div class="agent" *ngIf="(data.selectedUser$ | async) as user">
+                <h2 class="name">{{ user.name }}</h2>
+                <div class="contact">
+                  <p class="heading">Contact</p>
+                  <hr/>
+                  <div *ngIf="user.phone.trim().length >= 3" class="phone">
+                    <fa-icon class="icon" [icon]="['fas', 'phone']"></fa-icon>
+                    <p>{{ user.phone }}</p>
+                  </div>
+                  <div *ngIf="user.location.trim().length >= 3" class="location">
+                    <fa-icon class="icon"[icon]="['fas', 'home']"></fa-icon>
+                    <p>{{ user.location }}</p>
+                  </div>
+                  <div *ngIf="user.email.trim().length >= 3" class="email">
+                    <fa-icon class="icon"[icon]="['fas', 'envelope']"></fa-icon>
+                    <a [href]="setEmailHref()">{{ user.email }}</a>
+                  </div>
+                </div>
+                <div class="bio">
+                  <div *ngIf="user.bio.length >= 3" class="bio-content">
+                    {{ user.bio }}
+                  </div>
+                </div>
+                <div class="social">
+                  <a target="_blank" rel="noopener noreferrer" [href]="user.facebook" *ngIf="user.facebook.length >= 3" class="facebook">
+                    <fa-icon [icon]="['fab', 'facebook']"></fa-icon>
+                  </a>
+                  <a target="_blank" rel="noopener noreferrer" [href]="user.twitter" *ngIf="user.twitter.length >= 3" class="twitter">
+                    <fa-icon [icon]="['fab', 'twitter']"></fa-icon>
+                  </a>
+                  <a target="_blank" rel="noopener noreferrer" [href]="user.linkedIn" *ngIf="user.linkedIn.length >= 3" class="linkedin">
+                    <fa-icon [icon]="['fab', 'linkedin']"></fa-icon>
+                  </a>
+                </div>
               </div>
             </div>
-            <div *ngSwitchCase="'admin'"></div>
+            <div *ngSwitchCase="'admin'" [ngSwitch]="router.adminEntity$ | async" class="fill admin">
+              <div *ngSwitchCase="'suppliers'" class="suppliers">
+                <button class="btn" *ngFor="let supplier of suppliers" (click)="selectSupplier(supplier)">{{ supplier.name }}</button>
+              </div>
+              <div *ngSwitchCase="'resources'" class="resources">
+                <button class="btn" *ngFor="let resource of (data.resources$ | async)" (click)="selectResource(resource)">{{ resource.name }}</button>
+                <button class="btn" *ngFor="let resource of (data.learningResources$ | async)" (click)="selectResource(resource)">{{ resource.name }}</button>
+              </div>
+              <div *ngSwitchCase="'agents'" class="agents">
+                <button class="btn" *ngFor="let agent of (data.users$ | async)" (click)="selectAgent(agent)">{{ agent.name }}</button>
+              </div>
+            </div>
           </div>
       </div>
     </div>
@@ -222,16 +280,115 @@
       </div>
     </app-modal>
   </div>
+  <div *ngSwitchCase="'edit-note'">
+    <app-modal>
+      <div class="new-note">
+        <h4>Edit Note: {{ selectedNote.title }}</h4>
+        <form>
+          <input type="text" class="control" name="title" [(ngModel)]="selectedNote.title"/>
+          <input type="text" class="control" name="body" [(ngModel)]="selectedNote.body"/>
+          <button class="btn" (click)="editNote()">Update</button>
+        </form>
+      </div>
+    </app-modal>
+  </div>
   <div *ngSwitchCase="'delete-note'">
     <app-modal>
       <div class="delete-content">
-        <h4>Delete A Note</h4>
-        <button (click)="deleteNote(note)" class="btn" *ngFor="let note of me.notes">
-          {{ note.title}}
-          <fa-icon class="red" [icon]="['fas', 'times']"></fa-icon>
-        </button>
+        <h4>Are you sure you want to delete</h4>
+        <h4>{{ selectedNote.title }}?</h4>
+        <div class="btns">
+          <button class="btn" (click)="deleteNote(selectedNote)">
+            Confirm
+            <fa-icon class="green" [icon]="['fas', 'check']"></fa-icon>
+          </button>
+          <button class="btn" (click)="router.setModal('none')">
+            Cancel
+            <fa-icon class="red" [icon]="['fas', 'ban']"></fa-icon>
+          </button>
+        </div>
       </div>
     </app-modal>
+  </div>
+  <div *ngSwitchCase="'add'">
+    <app-modal>
+      <div class="add">
+        <!-- <h4>Edit Note: {{ selectedNote.title }}</h4>
+        <form>
+          <input type="text" class="control" name="title" [(ngModel)]="selectedNote.title"/>
+          <input type="text" class="control" name="body" [(ngModel)]="selectedNote.body"/>
+          <button class="btn" (click)="editNote()">Update</button>
+        </form> -->
+      </div>
+    </app-modal>
+  </div>
+  <div *ngSwitchCase="'edit'">
+    <app-modal>
+      <div class="edit">
+        <!-- <h4>Edit Note: {{ selectedNote.title }}</h4>
+        <form>
+          <input type="text" class="control" name="title" [(ngModel)]="selectedNote.title"/>
+          <input type="text" class="control" name="body" [(ngModel)]="selectedNote.body"/>
+          <button class="btn" (click)="editNote()">Update</button>
+        </form> -->
+      </div>
+    </app-modal>
+  </div>
+  <div *ngSwitchCase="'delete'">
+    <div *ngIf="selectedAgent !== null">
+      <app-modal>
+        <div class="delete-content">
+          <h4>Are you sure you want to delete</h4>
+          <h4>{{ selectedAgent.name }}?</h4>
+          <div class="btns">
+            <button class="btn" (click)="deleteAgent()">
+              Confirm
+              <fa-icon class="green" [icon]="['fas', 'check']"></fa-icon>
+            </button>
+            <button class="btn" (click)="router.setModal('none')">
+              Cancel
+              <fa-icon class="red" [icon]="['fas', 'ban']"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </app-modal>
+    </div>
+    <div *ngIf="selectedSupplier !== null">
+      <app-modal>
+        <div class="delete-content">
+          <h4>Are you sure you want to delete</h4>
+          <h4>{{ selectedSupplier.name }}?</h4>
+          <div class="btns">
+            <button class="btn" (click)="deleteSupplier()">
+              Confirm
+              <fa-icon class="green" [icon]="['fas', 'check']"></fa-icon>
+            </button>
+            <button class="btn" (click)="router.setModal('none')">
+              Cancel
+              <fa-icon class="red" [icon]="['fas', 'ban']"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </app-modal>
+    </div>
+    <div *ngIf="selectedResource !== null">
+      <app-modal>
+        <div class="delete-content">
+          <h4>Are you sure you want to delete</h4>
+          <h4>{{ selectedResource.name }}?</h4>
+          <div class="btns">
+            <button class="btn" (click)="deleteResource(selectedResource.type)">
+              Confirm
+              <fa-icon class="green" [icon]="['fas', 'check']"></fa-icon>
+            </button>
+            <button class="btn" (click)="router.setModal('none')">
+              Cancel
+              <fa-icon class="red" [icon]="['fas', 'ban']"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </app-modal>
+    </div>
   </div>
   <div *ngSwitchDefault></div>
 </div>

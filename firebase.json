@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": "dist/tfti-iso",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
